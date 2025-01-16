@@ -1,40 +1,42 @@
 import { hash, compare } from "bcrypt";
-import pool from "../../db.js";
+// import pool from "../../db.js";
 import pkg from "jsonwebtoken";
 const { sign, verify } = pkg;
 import "dotenv/config";
 
-import { DataTypes, Sequelize, Op } from "@sequelize/core";
+import { Op } from "@sequelize/core";
+import Users from "../models/User.model.js";
 
-const sequelize = new Sequelize({
- database: "music_player",
- user: "postgres",
- password: "123",
- host: "localhost",
- port: 5432,
- dialect: "postgres", // Указываем явно
- ssl: true, // SSL включен
- clientMinMessages: "notice",
- logging: false, // Отключение логирования (по желанию)
- ssl: {
-  require: true,
-  rejectUnauthorized: false, // Позволяет игнорировать самоподписанный сертификат
- },
-});
+// import Users from "../models/User.model";
+// const sequelize = new Sequelize({
+//  database: "music_player", //db table name
+//  user: "postgres", //user who get permission to db
+//  password: "123", // password for user named postgres
+//  host: "localhost",
+//  port: 5432,
+//  dialect: "postgres", //db name
+//  ssl: true, // turn on the SSL
+//  clientMinMessages: "notice", // `client_min_messages` session parameter. Detect the client message level from the server
+//  logging: false, // for customizing the log which sequelize will create for every SQL query it performs. Not necessary
+//  ssl: {
+//   require: true, // require for all actions with db
+//   rejectUnauthorized: false, //  let to ignore the verification of server certificate
+//  },
+// });
 
-const Users = sequelize.define(
- "users",
- {
-  user_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  user_name: { type: DataTypes.STRING },
-  user_email: { type: DataTypes.STRING },
-  user_password: { type: DataTypes.STRING },
- },
+// const Users = sequelize.define(
+//  "users",
+//  {
+//   user_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+//   user_name: { type: DataTypes.STRING },
+//   user_email: { type: DataTypes.STRING },
+//   user_password: { type: DataTypes.STRING },
+//  },
 
- {
-  timestamps: false,
- }
-);
+//  {
+//   timestamps: false,
+//  }
+// );
 
 // sequelize
 //  .authenticate()
@@ -179,25 +181,25 @@ class userController {
  //   res.status(200).json({ token: `Bearer ${token}` });
  //  }
 
- async updateUser(req, res) {
-  const { user_name, user_id, user_password } = req.body;
-  const user = await pool.query(
-   `UPDATE users SET user_name = $1, user_password = $2 WHERE user_id = $3 RETURNING *`,
-   [user_name, user_password, user_id]
-  );
-  res.json(user.rows[0]);
- }
- async deleteUser(req, res) {
-  const id = req.params.id;
-  console.log(req.params);
-  const user = await pool.query(
-   `DELETE FROM users W
-   HERE user_id = $1 RETURNING *`,
-   [id]
-  );
-  console.log(req.params);
-  res.json(user.rows[0]);
- }
+ //  async updateUser(req, res) {
+ //   const { user_name, user_id, user_password } = req.body;
+ //   const user = await pool.query(
+ //    `UPDATE users SET user_name = $1, user_password = $2 WHERE user_id = $3 RETURNING *`,
+ //    [user_name, user_password, user_id]
+ //   );
+ //   res.json(user.rows[0]);
+ //  }
+ //  async deleteUser(req, res) {
+ //   const id = req.params.id;
+ //   console.log(req.params);
+ //   const user = await pool.query(
+ //    `DELETE FROM users W
+ //    HERE user_id = $1 RETURNING *`,
+ //    [id]
+ //   );
+ //   console.log(req.params);
+ //   res.json(user.rows[0]);
+ //  }
 }
 
 export default new userController();
