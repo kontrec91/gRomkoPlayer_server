@@ -1,11 +1,12 @@
 import { hash, compare } from "bcrypt";
 // import pool from "../../db.js";
-import pkg from "jsonwebtoken";
-const { sign, verify } = pkg;
+// import pkg from "jsonwebtoken";
+// const { sign, verify } = pkg;
 import "dotenv/config";
 
 import { Op } from "@sequelize/core";
 import Users from "../models/User.model.js";
+import { generateAccessToken, generateRefreshToken } from "../utils/tokens.js";
 
 // import Users from "../models/User.model";
 // const sequelize = new Sequelize({
@@ -50,14 +51,13 @@ import Users from "../models/User.model.js";
 class userController {
  async createUser(req, res) {
   const { user_name, user_email, user_password } = req.body;
-  if (!user_email || !user_name || !user_password) {
-   return res.status(400).json({ message: "Missing required fields" });
-  }
+  //   if (!user_email || !user_name || !user_password) {
+  //    return res.status(400).json({ message: "Missing required fields" });
+  //   }
 
   const userExists = await Users.findOne({
    where: { [Op.or]: { user_email, user_name } },
   });
-  console.log("userExists", userExists);
   if (userExists) {
    return res.status(400).json({ message: "Email or name is already exists" });
   }
@@ -70,9 +70,15 @@ class userController {
    user_password: hashedPassword,
   });
 
-  console.log("newUser", newUser);
+ //create tokens
+  const accessToken = generateAccessToken(newUser);
+  const refreshToken = generateRefreshToken(newUser);
 
-  return res.status(200).json(newUser);
+  //   return res.status(200).json(newUser);
+  return res.status(200).json({
+   accessToken,
+   refreshToken,
+  });
  }
 
  //  async createUser(req, res) {
@@ -129,16 +135,25 @@ class userController {
     .status(401)
     .json({ message: "Incorrect password. Please try again" });
   }
-  const token = sign(
-   {
-    id: currentUserId,
-    email: currentUserEmail,
-    name: currentUserName,
-   },
-   process.env.JWT_SECRET,
-   { expiresIn: "1h" }
-  );
-  return res.status(200).json({ message: `Bearer ${token}` });
+
+  const accessToken = generateAccessToken(currentUser.dataValues);
+  const refreshToken = generateRefreshToken(currentUser.dataValues);
+
+  return res.status(200).json({ accessToken, refreshToken });
+
+  //   const token = sign(
+  //    {
+  //     id: currentUserId,
+  //     email: currentUserEmail,
+  //     name: currentUserName,
+  //    },
+  //    process.env.JWT_SECRET,
+  //    { expiresIn: "1h" }
+  //   );
+  //   return res.status(200).json(
+  //    // message: { "Access Token": `Bearer ${token}`, "Refresh Token": "" },
+  //    { "Access Token": `Bearer ${token}`, "Refresh Token": "" }
+  //   );
  }
 
  //  async getOneUser(req, res) {

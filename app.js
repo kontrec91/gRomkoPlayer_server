@@ -3,8 +3,8 @@
 // require("dotenv").config();
 
 import express, { json } from "express";
-import https from "https";
-import fs from "fs";
+// import https from "https";
+// import fs from "fs";
 import cors from "cors";
 import userRouter from "./src/routes/user.routes.js";
 
@@ -18,7 +18,15 @@ const port = 3000;
 //     key: fs.readFileSync('')
 // }
 
-app.use(cors({ origin: "https://localhost:3001" }));
+app.use(
+ cors({
+  //   origin: "https://localhost:3001",
+  origin: "http://localhost:3001",
+
+  //   credentials: true, //access-control-allow-credentials:true
+  //   optionSuccessStatus: 200,
+ })
+);
 app.use(json());
 app.use("/api/user", userRouter);
 
