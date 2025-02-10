@@ -3,7 +3,11 @@ import "dotenv/config";
 
 import { Op } from "@sequelize/core";
 import Users from "../models/User.model.js";
-import { generateAccessToken, generateRefreshToken } from "../utils/tokens.js";
+import {
+ //  generateAccessToken,
+ //  generateRefreshToken,
+ generateToken,
+} from "../utils/tokens.js";
 import RefreshToken from "../models/RefreshToken.model.js";
 
 class userController {
@@ -26,8 +30,18 @@ class userController {
   });
 
   //create tokens
-  const accessToken = generateAccessToken(newUser);
-  const refreshToken = generateRefreshToken(newUser);
+  //   const accessToken = generateAccessToken(newUser);
+  //   const refreshToken = generateRefreshToken(newUser);
+  const accessToken = generateToken(
+   newUser,
+   process.env.ACCESS_TOKEN_SECRET,
+   "15min"
+  );
+  const refreshToken = generateToken(
+   newUser,
+   process.env.REFRESH_TOKEN_SECRET,
+   "7d"
+  );
 
   await RefreshToken.create({
    user_id: newUser.user_id,
@@ -64,8 +78,19 @@ class userController {
     .json({ message: "Incorrect password. Please try again" });
   }
 
-  const accessToken = generateAccessToken(currentUser.dataValues);
-  const refreshToken = generateRefreshToken(currentUser.dataValues);
+  //   const accessToken = generateAccessToken(currentUser.dataValues);
+  //   const refreshToken = generateRefreshToken(currentUser.dataValues);
+
+  const accessToken = generateToken(
+   currentUser.dataValues,
+   process.env.ACCESS_TOKEN_SECRET,
+   "15min"
+  );
+  const refreshToken = generateToken(
+   currentUser.dataValues,
+   process.env.REFRESH_TOKEN_SECRET,
+   "7d"
+  );
 
   const existRefreshToken = await RefreshToken.findOne({
    where: { user_id: currentUserId },
@@ -85,6 +110,64 @@ class userController {
 
   return res.status(200).json({ accessToken, refreshToken });
  }
+
+ async logout(req, res) {
+  console.log("REQUEST", req.body);
+  const refreshToken = await RefreshToken.destroy({
+   where: {
+    user_id: req.body.user_id,
+   },
+  });
+  console.log("refreshToken", refreshToken);
+  if (refreshToken) {
+   return res.status(200).json({ message: "OK" });
+  }
+  return res.status(400).json({ message: "Something went`s wrong" });
+ }
 }
 
 export default new userController();
+
+// refresh access token, --- before need to validate access token
+// const isValidRefreshToken = async (token) => {
+//     const result = await db.query('SELECT * FROM refresh_tokens WHERE token = $1', [token]);
+//     return result.rows.length > 0;
+// };
+
+// 3. get new access token
+// app.post('/token', (req, res) => {
+//     const refreshToken = req.body.token;
+//     if (!refreshToken) return res.sendStatus(401);
+//     if (!refreshTokens.includes(refreshToken)) return res.sendStatus(403);
+
+//     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+//         if (err) return res.sendStatus(403);
+//         const accessToken = generateAccessToken({ name: user.name });
+//         res.json({ accessToken });
+//     });
+// });
+
+// 4, check token
+// const authenticateToken = (req, res, next) => {
+//     const authHeader = req.headers['authorization'];
+//     const token = authHeader && authHeader.split(' ')[1];
+//     if (!token) return res.sendStatus(401);
+
+//     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+//         if (err) return res.sendStatus(403);
+//         req.user = user;
+//         next();
+//     });
+// };
+
+// 5. Example of a protected route:
+// app.get('/protected', authenticateToken, (req, res) => {
+//     res.send(`Hello, ${req.user.name}`);
+// });
+
+// 6. delete refresho token from the list
+// app.post('/logout', (req, res) => {
+//     const refreshToken = req.body.token;
+//     refreshTokens = refreshTokens.filter(token => token !== refreshToken);
+//     res.sendStatus(204);
+// });
