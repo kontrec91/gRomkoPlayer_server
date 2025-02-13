@@ -3,20 +3,16 @@ import "dotenv/config";
 
 import { Op } from "@sequelize/core";
 import Users from "../models/User.model.js";
-import {
- //  generateAccessToken,
- //  generateRefreshToken,
- generateToken,
-} from "../utils/tokens.js";
+import { generateToken } from "../utils/tokens.js";
 import RefreshToken from "../models/RefreshToken.model.js";
 
 class userController {
  async createUser(req, res) {
   const { user_name, user_email, user_password } = req.body;
-
   const userExists = await Users.findOne({
    where: { [Op.or]: { user_email, user_name } },
   });
+
   if (userExists) {
    return res.status(400).json({ message: "Email or name is already exists" });
   }
@@ -30,8 +26,6 @@ class userController {
   });
 
   //create tokens
-  //   const accessToken = generateAccessToken(newUser);
-  //   const refreshToken = generateRefreshToken(newUser);
   const accessToken = generateToken(
    newUser,
    process.env.ACCESS_TOKEN_SECRET,
@@ -78,9 +72,6 @@ class userController {
     .json({ message: "Incorrect password. Please try again" });
   }
 
-  //   const accessToken = generateAccessToken(currentUser.dataValues);
-  //   const refreshToken = generateRefreshToken(currentUser.dataValues);
-
   const accessToken = generateToken(
    currentUser.dataValues,
    process.env.ACCESS_TOKEN_SECRET,
@@ -106,8 +97,7 @@ class userController {
     user_id: currentUserId,
     token: refreshToken,
    });
-  } // maybe it not necessary because token must be in db after registration
-
+  }
   return res.status(200).json({ accessToken, refreshToken });
  }
 
@@ -115,12 +105,12 @@ class userController {
   console.log("REQUEST", req.body);
   const refreshToken = await RefreshToken.destroy({
    where: {
-    user_id: req.body.user_id,
+    token: req.body.token,
    },
   });
   console.log("refreshToken", refreshToken);
   if (refreshToken) {
-   return res.status(200).json({ message: "OK" });
+   return res.sendStatus(204);
   }
   return res.status(400).json({ message: "Something went`s wrong" });
  }
@@ -163,11 +153,4 @@ export default new userController();
 // 5. Example of a protected route:
 // app.get('/protected', authenticateToken, (req, res) => {
 //     res.send(`Hello, ${req.user.name}`);
-// });
-
-// 6. delete refresho token from the list
-// app.post('/logout', (req, res) => {
-//     const refreshToken = req.body.token;
-//     refreshTokens = refreshTokens.filter(token => token !== refreshToken);
-//     res.sendStatus(204);
 // });
