@@ -1,10 +1,13 @@
 import Router from "express";
 import userController from "../controllers/user.controller.js";
+import trackController from "../controllers/track.controller.js";
 
 const router = new Router();
 
 router.post("/registration", userController.createUser);
 router.post("/login", userController.getOneUser);
 router.delete("/logout", userController.logout);
+
+// router.post("/file/upload", trackController.addTrack);
 
 export default router;

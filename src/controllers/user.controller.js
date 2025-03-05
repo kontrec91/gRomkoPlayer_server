@@ -9,21 +9,35 @@ import RefreshToken from "../models/RefreshToken.model.js";
 class userController {
  async createUser(req, res) {
   const { user_name, user_email, user_password } = req.body;
-  const userExists = await Users.findOne({
-   where: { [Op.or]: { user_email, user_name } },
-  });
-
-  if (userExists) {
-   return res.status(400).json({ message: "Email or name is already exists" });
-  }
 
   const hashedPassword = await hash(user_password, 10);
 
-  const newUser = await Users.create({
-   user_email,
-   user_name,
-   user_password: hashedPassword,
-  });
+  try {
+   const newUser = await Users.create({
+    user_email,
+    user_name,
+    user_password: hashedPassword,
+   });
+  } catch (error) {
+   if (error.name === "SequelizeUniqueConstraintError") {
+    return res.status(400).json({ message: "Email or name already exists" });
+   }
+   return res.status(500).json({ message: "Internal server error" });
+  }
+
+  //   const userExists = await Users.findOne({
+  //    where: { [Op.or]: { user_email, user_name } },
+  //   });
+
+  //   if (userExists) {
+  //    return res.status(400).json({ message: "Email or name is already exists" });
+  //   }
+
+  //   const newUser = await Users.create({
+  //    user_email,
+  //    user_name,
+  //    user_password: hashedPassword,
+  //   });
 
   //create tokens
   const accessToken = generateToken(
@@ -49,6 +63,7 @@ class userController {
  }
 
  async getOneUser(req, res) {
+  console.log("login");
   const { user_email, user_password } = req.body;
   const currentUser = await Users.findOne({ where: { user_email } });
   if (!currentUser) {
