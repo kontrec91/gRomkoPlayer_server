@@ -11,14 +11,14 @@ const Tracks = sequelize.define(
   user_id: {
    type: DataTypes.INTEGER,
    allowNull: false,
-   references: { model: "users", key: "user_id" },
+   //    references: { model: "users", foreignKey: "user_id" },
   },
  },
 
  { timestamps: false }
 );
 
-Users.hasMany(Tracks);
-Tracks.belongsTo(Users);
+Users.hasMany(Tracks, { foreignKey: "user_id" });
+// Tracks.belongsTo(Users);
 
 export default Tracks;

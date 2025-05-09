@@ -20,7 +20,7 @@ import { v2 as cloudinary } from "cloudinary";
    console.log(error);
   });
 
- console.log(uploadResult);
+ console.log("console.log", uploadResult);
 
  // Optimize delivery by resizing and applying auto-format and auto-quality
  const optimizeUrl = cloudinary.url("shoes", {
